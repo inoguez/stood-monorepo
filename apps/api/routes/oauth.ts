@@ -23,7 +23,7 @@ const REFRESH_TOKEN_EXPIRATION = '7d';
 
 const router = express.Router();
 
-router.post('/isSignedIn', (req, res) => {
+router.get('/isSignedIn', (req, res) => {
   const accessToken = req.headers['authorization'];
 
   console.log('access', accessToken);
@@ -52,20 +52,15 @@ router.get('/logout', (req, res) => {
 });
 
 router.get('/', async (req, res) => {
-  console.log('aaa');
   const { code } = req.query;
   const { tokens } = await oAuth2Client.getToken(code as string);
   try {
     await oAuth2Client.setCredentials(tokens);
-    console.log('Tokens acquired');
-    const user = oAuth2Client.credentials;
-    console.log('Credentials', user);
 
     const { data }: { data: any } = await oAuth2Client.request({
       url: `https://www.googleapis.com/oauth2/v3/userinfo`,
     });
-    console.log(tokens);
-    console.log('data', data);
+
     const userCreated = await insertOrUpdateUser({
       email: data.email,
       name: data.name,
@@ -73,7 +68,6 @@ router.get('/', async (req, res) => {
       refreshToken: tokens.refresh_token,
       createdAt: new Date().toLocaleString('es-MX', { timeZone: 'UTC' }),
     });
-    console.log(userCreated);
 
     const accessToken = jwt.sign({ userId: data.id }, JWT_SECRET as string, {
       expiresIn: ACCESS_TOKEN_EXPIRATION,
@@ -81,18 +75,28 @@ router.get('/', async (req, res) => {
     const refreshToken = jwt.sign({ userId: data.id }, JWT_SECRET as string, {
       expiresIn: REFRESH_TOKEN_EXPIRATION,
     });
+    console.log('access', accessToken);
 
     res.cookie(
       'accessToken',
       accessToken,
       accessTokenCookieOptions(Date.now() + ACCESS_COOKIE_EXPIRATION_MS)
     );
+    console.log('refresh', refreshToken);
+
     res.cookie(
       'refreshToken',
       refreshToken,
       refreshTokenCookieOptions(Date.now() + REFRESH_COOKIE_EXPIRATION_MS)
     );
-    res.redirect('http://localhost:3000');
+    const params = new URLSearchParams();
+    res.setHeader('Authorization', `Bearer ${accessToken}`);
+    // Agregar múltiples parámetros de consulta
+    params.append('accessToken', accessToken);
+    params.append('refreshToken', refreshToken);
+    res.redirect(
+      (process.env.FRONTEND_URL as string) + `?${params.toString()}`
+    );
   } catch (error) {
     console.log('error with sign in with google', error);
   }
