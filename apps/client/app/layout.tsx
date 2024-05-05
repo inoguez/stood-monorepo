@@ -10,22 +10,19 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-  sidebar,
-  chat,
+  children,
 }: Readonly<{
-  sidebar: React.ReactNode;
-  chat: React.ReactNode;
+  children: React.ReactNode;
 }>) {
   return (
     <html lang='en'>
       <body
         className={cn(
           inter.className,
-          'bg-neutral-800 flex gap-4 min-h-screen p-4 text-neutral-400'
+          'bg-neutral-800 text-neutral-400 flex gap-4 min-h-screen p-4'
         )}
       >
-        {sidebar}
-        {chat}
+        {children}
       </body>
     </html>
   );

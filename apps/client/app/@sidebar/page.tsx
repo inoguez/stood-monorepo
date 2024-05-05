@@ -1,4 +1,8 @@
+import { AddFriend } from '@/components/AddFriend';
 import { FriendItem } from '@/components/FriendItem';
+import { SearchBar } from '@/components/SearchBar';
+import { SelfItem } from '@/components/SelfItem';
+import { StoodLogo } from '@/components/StoodLogo';
 import { CircleUser } from 'lucide-react';
 
 export default function UsersPage() {
@@ -180,15 +184,25 @@ export default function UsersPage() {
     },
   ];
   return (
-    <div className='relative  h-full'>
-      <div className='absolute top-0 left-0 bottom-0 right-0 overflow-hidden hover:overflow-y-auto flex flex-col gap-3 px-[0.4rem] py-4 w-full scroll-issue'>
-        {FRIENDS?.map((e) => (
-          <FriendItem key={e.id}>
-            <CircleUser />
-            {e.full_name}
-          </FriendItem>
-        ))}
+    <div className='flex flex-col gap-4 w-72'>
+      <StoodLogo />
+      <div className='flex gap-4'>
+        <SearchBar />
+        <AddFriend />
       </div>
+      <div className=' bg-neutral-700 rounded-2xl flex-1 flex flex-col gap-2 overflow-hidden'>
+        <div className='relative  h-full'>
+          <div className='absolute top-0 left-0 bottom-0 right-0 overflow-hidden hover:overflow-y-auto flex flex-col gap-3 px-[0.4rem] py-4 w-full scroll-issue'>
+            {FRIENDS?.map((e) => (
+              <FriendItem key={e.id}>
+                <CircleUser />
+                {e.full_name}
+              </FriendItem>
+            ))}
+          </div>
+        </div>
+      </div>
+      <SelfItem />
     </div>
   );
 }

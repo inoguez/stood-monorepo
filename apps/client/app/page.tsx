@@ -1,7 +1,12 @@
 import Image from 'next/image';
+import UsersPage from './@sidebar/page';
+import ChatPage from './@chat/page';
 
 export default function Home() {
   return (
-    <main className='flex min-h-screen flex-col items-center justify-between p-4'></main>
+    <>
+      <UsersPage />
+      <ChatPage />
+    </>
   );
 }

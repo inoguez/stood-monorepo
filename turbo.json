@@ -3,6 +3,16 @@
   "pipeline": {
     "dev": {
       "cache": false
-    }
+    },
+    "start": {
+      "cache": false
+    },
+    "build": {
+      "cache": false
+    },
+    "test": {
+      "cache": false
+    },
+    "lint": { "cache": false }
   }
 }
