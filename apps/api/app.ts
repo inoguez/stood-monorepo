@@ -2,14 +2,14 @@
 import express from 'express';
 import logger from 'morgan';
 import Pusher from 'pusher';
-import bodyParser from 'body-parser';
 import requestRouter from './routes/request';
 import authRouter from './routes/oauth';
 import dotenv from 'dotenv';
+import cors from 'cors';
 dotenv.config();
 // Crea una instancia de la aplicación Express
 const app = express();
-
+app.use(cors());
 app.use(logger('dev'));
 // Define el puerto en el que la aplicación escuchará las solicitudes
 const PORT = process.env.PORT || 4000;
@@ -36,6 +36,7 @@ const pusher = new Pusher({
   cluster: 'us2',
   useTLS: true,
 });
+
 app.post('/api/messages', async (req, res) => {
   console.log(req.body, '****');
   await pusher.trigger('chat', 'message', {

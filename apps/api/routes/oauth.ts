@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { db } from '../db/connection';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
+import { nanoid } from 'nanoid';
 dotenv.config();
 
 const redirectUrl = process.env.REDIRECT_URL;
@@ -60,12 +61,13 @@ router.get('/', async (req, res) => {
     const { data }: { data: any } = await oAuth2Client.request({
       url: `https://www.googleapis.com/oauth2/v3/userinfo`,
     });
-
+    let id = nanoid();
     const userCreated = await insertOrUpdateUser({
+      id: id,
       email: data.email,
       name: data.name,
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
+      accessToken: tokens.access_token as string,
+      refreshToken: tokens.refresh_token as string,
       createdAt: new Date().toLocaleString('es-MX', { timeZone: 'UTC' }),
     });
 
@@ -90,11 +92,12 @@ router.get('/', async (req, res) => {
       refreshTokenCookieOptions(Date.now() + REFRESH_COOKIE_EXPIRATION_MS)
     );
     const params = new URLSearchParams();
+    res.setHeader('Content-Type', 'application/json');
     res.setHeader('Authorization', `Bearer ${accessToken}`);
     // Agregar múltiples parámetros de consulta
     params.append('accessToken', accessToken);
     params.append('refreshToken', refreshToken);
-    res.redirect(
+    return res.redirect(
       (process.env.FRONTEND_URL as string) + `?${params.toString()}`
     );
   } catch (error) {
@@ -129,7 +132,7 @@ const insertOrUpdateUser = async (user: NewUser) => {
   const isUserOnDB = await db
     .select()
     .from(users)
-    .where(eq(users.email, user.email as string));
+    .where(eq(users.id, user.id as string));
   console.log('isOnDb', isUserOnDB);
 
   return isUserOnDB.length > 0
@@ -142,7 +145,7 @@ const insertOrUpdateUser = async (user: NewUser) => {
           refreshToken: user.refreshToken,
           updatedAt: new Date().toLocaleString('es-MX', { timeZone: 'UTC' }),
         })
-        .where(eq(users.email, user.email as string))
+        .where(eq(users.id, user.id as string))
     : db.insert(users).values(user);
 };
 export default router;

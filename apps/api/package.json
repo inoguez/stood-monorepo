@@ -17,14 +17,17 @@
   "license": "ISC",
   "dependencies": {
     "@libsql/client": "^0.6.0",
+    "@types/cors": "^2.8.17",
     "@types/morgan": "^1.9.9",
     "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.30.10",
     "express": "4.19.2",
     "google-auth-library": "^9.9.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "1.10.0",
+    "nanoid": "^5.0.7",
     "pusher": "^5.2.0"
   },
   "devDependencies": {
