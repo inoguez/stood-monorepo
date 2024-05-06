@@ -13,8 +13,10 @@ const corsOptions = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 export async function middleware(request: NextRequest) {
+  console.log(request.headers.get('Authorization'), 'Header');
   const nextUrl = request.nextUrl;
   const path = nextUrl.pathname;
+  console.log(path, 'path');
   const isProtectedRoute = protectedRoutes.includes(path);
   const isPublicRoute = publicRoutes.includes(path);
 
@@ -24,9 +26,9 @@ export async function middleware(request: NextRequest) {
   //refactor this
   const searchParamsAT = nextUrl.searchParams.get('accessToken');
   const searchParamsRF = nextUrl.searchParams.get('refreshToken');
-  console.log('accessToken', accessToken, 'refreshToken', refreshToken);
+  console.log('accessToken1', accessToken, 'refreshToken1', refreshToken);
   const token = searchParamsAT ? searchParamsAT : accessToken;
-
+  console.log(token, 'aaa');
   const response = await fetch(process.env.STOOD_API + '/oauth/isSignedIn', {
     method: 'GET',
     headers: {
@@ -40,16 +42,26 @@ export async function middleware(request: NextRequest) {
   }
 
   const res = await response.json();
-
+  console.log(res, 'respuesta');
   // 5. Redirect to /login if the user is not authenticated
   if (isProtectedRoute && !res.isSignedIn) {
+    console.log('222');
     return NextResponse.redirect(new URL('/auth', nextUrl));
   }
 
   // 6. Redirect to /dashboard if the user is authenticated
+  console.log(isPublicRoute, 'isPublicRoute');
+  console.log(res.isSignedIn, 'res.isSignedIn ');
+  console.log(
+    !nextUrl.pathname.startsWith('/'),
+    '!nextUrl.pathname.startsWith(/)'
+  );
   if (isPublicRoute && res.isSignedIn && !nextUrl.pathname.startsWith('/')) {
+    console.log('3333');
+
     return NextResponse.redirect(new URL('/', nextUrl));
   }
+  console.log('4444');
 
   // const headers = new Headers(request.headers);
 

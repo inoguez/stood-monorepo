@@ -18,6 +18,7 @@
   "dependencies": {
     "@libsql/client": "^0.6.0",
     "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
     "@types/morgan": "^1.9.9",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",

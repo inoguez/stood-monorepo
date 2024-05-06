@@ -2,10 +2,11 @@ import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import express, { CookieOptions } from 'express';
 import dotenv from 'dotenv';
-import { db } from '../db/connection';
-import { users } from '../db/schema';
+import { db } from '../models/connection';
+import { users } from '../models/schema';
 import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
+import { UserController } from '../controllers/UserController';
 dotenv.config();
 
 const redirectUrl = process.env.REDIRECT_URL;
@@ -45,7 +46,7 @@ router.get('/isSignedIn', (req, res) => {
     res.json({ isSignedIn: true, message: 'Signed In', user: decoded });
   });
 });
-
+``;
 router.get('/logout', (req, res) => {
   res.cookie('accessToken', '', accessTokenCookieOptions(0));
   res.cookie('refreshToken', '', refreshTokenCookieOptions(0));
@@ -92,8 +93,8 @@ router.get('/', async (req, res) => {
       refreshTokenCookieOptions(Date.now() + REFRESH_COOKIE_EXPIRATION_MS)
     );
     const params = new URLSearchParams();
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Authorization', `Bearer ${accessToken}`);
+    res.header('Content-Type', 'application/json');
+    res.header('Authorization', `Bearer ${accessToken}`);
     // Agregar múltiples parámetros de consulta
     params.append('accessToken', accessToken);
     params.append('refreshToken', refreshToken);
@@ -105,6 +106,7 @@ router.get('/', async (req, res) => {
   }
 });
 
+//UTILS
 function accessTokenCookieOptions(expires_ms: number) {
   console.log(expires_ms);
   let cookieOptions: CookieOptions = {
@@ -129,13 +131,9 @@ function refreshTokenCookieOptions(expires_ms: number) {
 
 type NewUser = typeof users.$inferInsert;
 const insertOrUpdateUser = async (user: NewUser) => {
-  const isUserOnDB = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, user.id as string));
-  console.log('isOnDb', isUserOnDB);
+  const isUserOnDB = await UserController.userExists(user.email as string);
 
-  return isUserOnDB.length > 0
+  return isUserOnDB
     ? db
         .update(users)
         .set({

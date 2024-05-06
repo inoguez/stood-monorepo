@@ -4,6 +4,8 @@ import logger from 'morgan';
 import Pusher from 'pusher';
 import requestRouter from './routes/request';
 import authRouter from './routes/oauth';
+import friendRouter from './routes/friends';
+import userRouter from './routes/users';
 import dotenv from 'dotenv';
 import cors from 'cors';
 dotenv.config();
@@ -20,6 +22,8 @@ app.listen(PORT, () => {
 
 app.use('/oauth', authRouter);
 app.use('/request', requestRouter);
+app.use('/users', userRouter);
+app.use('/friends', friendRouter);
 app.use(express.json());
 
 // Define una ruta básica
