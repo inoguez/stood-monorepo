@@ -1,12 +1,12 @@
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import express, { CookieOptions } from 'express';
-import dotenv from 'dotenv';
 import { db } from '../models/connection';
-import { users } from '../models/schema';
+import { User, users } from '../models/schema';
 import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { UserController } from '../controllers/UserController';
+import dotenv from 'dotenv';
 dotenv.config();
 
 const redirectUrl = process.env.REDIRECT_URL;
@@ -62,15 +62,8 @@ router.get('/', async (req, res) => {
     const { data }: { data: any } = await oAuth2Client.request({
       url: `https://www.googleapis.com/oauth2/v3/userinfo`,
     });
+    console.log(data);
     let id = nanoid();
-    const userCreated = await insertOrUpdateUser({
-      id: id,
-      email: data.email,
-      name: data.name,
-      accessToken: tokens.access_token as string,
-      refreshToken: tokens.refresh_token as string,
-      createdAt: new Date().toLocaleString('es-MX', { timeZone: 'UTC' }),
-    });
 
     const accessToken = jwt.sign({ userId: data.id }, JWT_SECRET as string, {
       expiresIn: ACCESS_TOKEN_EXPIRATION,
@@ -78,6 +71,19 @@ router.get('/', async (req, res) => {
     const refreshToken = jwt.sign({ userId: data.id }, JWT_SECRET as string, {
       expiresIn: REFRESH_TOKEN_EXPIRATION,
     });
+
+    const userCreated = await insertOrUpdateUser({
+      id: id,
+      email: data.email,
+      name: data.name,
+      picture: data.picture,
+      accessToken: accessToken as string,
+      refreshToken: refreshToken as string,
+      createdAt: new Date().toLocaleString('es-MX', { timeZone: 'UTC' }),
+      updatedAt: new Date().toLocaleString('es-MX', { timeZone: 'UTC' }),
+    });
+    console.log(userCreated, 'created');
+
     console.log('access', accessToken);
 
     res.cookie(
@@ -129,19 +135,19 @@ function refreshTokenCookieOptions(expires_ms: number) {
   return cookieOptions;
 }
 
-type NewUser = typeof users.$inferInsert;
-const insertOrUpdateUser = async (user: NewUser) => {
-  const isUserOnDB = await UserController.userExists(user.email as string);
-
+const insertOrUpdateUser = async (user: User) => {
+  const [isUserOnDB] = await UserController.userExists(user.email as string);
+  console.log(isUserOnDB, 'exist');
   return isUserOnDB
     ? db
         .update(users)
         .set({
           email: user.email,
           name: user.name,
+          picture: user.picture,
           accessToken: user.accessToken,
           refreshToken: user.refreshToken,
-          updatedAt: new Date().toLocaleString('es-MX', { timeZone: 'UTC' }),
+          updatedAt: user.updatedAt,
         })
         .where(eq(users.id, user.id as string))
     : db.insert(users).values(user);

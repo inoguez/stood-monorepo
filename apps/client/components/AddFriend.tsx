@@ -1,5 +1,7 @@
+'use server';
+import { ComboboxDemo } from './ui/combobox';
+import { searchQuery } from '@/app/actions/searchQuery';
+
 export const AddFriend = () => {
-  return (
-    <div className='bg-neutral-700 rounded-2xl flex-1 px-2 py-1'>AddFriend</div>
-  );
+  return <ComboboxDemo searchQuery={searchQuery} />;
 };

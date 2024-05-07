@@ -1,5 +1,5 @@
 // Importa el módulo Express
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import logger from 'morgan';
 import Pusher from 'pusher';
 import requestRouter from './routes/request';
@@ -22,9 +22,21 @@ app.listen(PORT, () => {
 
 app.use('/oauth', authRouter);
 app.use('/request', requestRouter);
-app.use('/users', userRouter);
-app.use('/friends', friendRouter);
+app.use('/users', isAuthenticated, userRouter);
+app.use('/friends', isAuthenticated, friendRouter);
 app.use(express.json());
+
+function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+  const accessToken = req.headers['authorization'];
+  console.log(accessToken, 'middleware');
+  if (!accessToken) {
+    return res
+      .status(401)
+      .json({ isSignedIn: false, message: 'Sin iniciar sesión' });
+  }
+  console.log(accessToken, 'pasopa');
+  return next();
+}
 
 // Define una ruta básica
 // app.get('/', async (req, res) => {

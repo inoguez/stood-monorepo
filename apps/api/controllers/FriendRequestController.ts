@@ -5,6 +5,7 @@ import { Status, friendRequest, validateStatus } from '../models/schema';
 import { nanoid } from 'nanoid';
 import { eq } from 'drizzle-orm';
 import { FriendController } from './FriendController';
+import { replaceRequestBody } from '../utils/replaceRequestBody';
 
 // Controlador para manejar las operaciones relacionadas con las solicitudes de amistad
 export class FriendRequestController {
@@ -85,11 +86,34 @@ export class FriendRequestController {
         return;
       }
 
+      const [senderId] = await UserController.userExistsById(
+        request.senderId as string
+      );
+      const [ReceiverId] = await UserController.userExistsById(
+        request.receiverId as string
+      );
+
+      const bodySenderId = {
+        userId: request.senderId,
+        friendId: request.receiverId,
+        email: senderId.email,
+      };
+      const bodyReceiverId = {
+        userId: request.receiverId,
+        friendId: request.senderId,
+        email: ReceiverId.id,
+      };
+      const newBodyUserSenderId = replaceRequestBody(req, bodySenderId);
+      const newBodyUserFriendId = replaceRequestBody(req, bodyReceiverId);
+      //Se añade como amigo al que envia
+      await FriendController.addFriend(newBodyUserSenderId, res);
+      //Se añade como amigo al que al que recibe
+      await FriendController.addFriend(newBodyUserFriendId, res);
+
       // Actualiza el estado de la solicitud
       const requestUpdated = await db
         .update(friendRequest)
         .set({ status: action as Status });
-
       // Envía la respuesta con el estado actualizado de la solicitud
       res.status(200).json(requestUpdated);
     } catch (error) {

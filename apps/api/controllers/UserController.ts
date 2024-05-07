@@ -2,9 +2,45 @@ import { Request, Response } from 'express';
 import { db } from '../models/connection';
 import { User, users } from '../models/schema';
 import { nanoid } from 'nanoid';
-import { eq } from 'drizzle-orm';
-
+import { and, eq, like, ne, not } from 'drizzle-orm';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+dotenv.config();
 export class UserController {
+  static async getUsersByTerm(req: Request, res: Response): Promise<void> {
+    const accessToken = req.headers['authorization'];
+    const token = jwt.verify(
+      accessToken as string,
+      process.env.JWT_SECRET as string
+    );
+    console.log(token, 'token pa');
+    try {
+      const searchTerm = req.query.searchTerm;
+      console.log(searchTerm, 'aaaa');
+      // Busca todos los usuarios en la base de datos
+
+      const userByTerm = await db
+        .select({
+          name: users.name,
+          email: users.email,
+          picture: users.picture,
+          accessToken: users.accessToken,
+        })
+        .from(users)
+        .where(
+          and(
+            ne(users.accessToken, accessToken as string),
+            like(users.email, `%${searchTerm}%`)
+          )
+        );
+      console.log(userByTerm, 'data');
+      // Envía la respuesta con los usuarios encontrados
+      res.status(200).json(userByTerm);
+    } catch (error) {
+      // Maneja los errores
+      res.status(500).json({ error: 'Error al obtener usuarios' });
+    }
+  }
   static async getAllUsers(req: Request, res: Response): Promise<void> {
     try {
       // Busca todos los usuarios en la base de datos
@@ -41,6 +77,14 @@ export class UserController {
       .select()
       .from(users)
       .where(eq(users.email, email as string));
+    return isUserOnDB; // Devuelve un array con el usuario existe, de lo contrario manda un array vació
+  }
+  static async userExistsById(id: string): Promise<User[]> {
+    // Busca un usuario con el correo electrónico proporcionado
+    const isUserOnDB = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, id as string));
     return isUserOnDB; // Devuelve un array con el usuario existe, de lo contrario manda un array vació
   }
 
