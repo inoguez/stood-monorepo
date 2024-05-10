@@ -14,6 +14,5 @@ router.get('/search', UserController.getUsersByTerm);
 router.post('/', UserController.createUser);
 
 // Ruta para actualizar un usuario existente
-router.put('/:id', UserController.updateUser);
 
 export default router;

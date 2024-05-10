@@ -16,13 +16,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-      <body
-        className={cn(
-          inter.className,
-          'bg-neutral-800 text-neutral-400 flex gap-4 min-h-screen p-4'
-        )}
-      >
-        {children}
+      <body className={cn(inter.className, '')}>
+        <div
+          vaul-drawer-wrapper=''
+          className='flex gap-4 min-h-screen p-4 bg-neutral-800 text-neutral-400 '
+        >
+          {children}
+        </div>
       </body>
     </html>
   );

@@ -1,11 +1,9 @@
 import { OAuth2Client } from 'google-auth-library';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import express, { CookieOptions } from 'express';
 import { db } from '../models/connection';
-import { User, users } from '../models/schema';
-import { eq } from 'drizzle-orm';
+import { users } from '../models/schema';
 import { nanoid } from 'nanoid';
-import { UserController } from '../controllers/UserController';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -16,18 +14,66 @@ const oAuth2Client = new OAuth2Client(
   process.env.CLIENT_SECRET,
   redirectUrl
 );
-
-const ACCESS_COOKIE_EXPIRATION_MS = 60 * 60 * 1000;
-const REFRESH_COOKIE_EXPIRATION_MS = 7 * (24 * (60 * 60 * 1000));
-const JWT_SECRET = process.env.JWT_SECRET;
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
 const ACCESS_TOKEN_EXPIRATION = '1h';
 const REFRESH_TOKEN_EXPIRATION = '7d';
 
+const ACCESS_COOKIE_EXPIRATION_MS = 1 * HOUR_MS;
+const REFRESH_COOKIE_EXPIRATION_MS = 7 * DAY_MS;
+const JWT_SECRET = process.env.JWT_SECRET;
+
 const router = express.Router();
+
+router.post('/refresh', (req, res) => {
+  const { refreshToken } = req.cookies;
+  if (!refreshToken) {
+    return res.status(401).json({ error: 'Refresh token required' });
+  }
+
+  try {
+    const userData = jwt.verify(
+      refreshToken,
+      JWT_SECRET as string
+    ) as JwtPayload;
+    const newAccessToken = jwt.sign(
+      { userId: userData.id },
+      JWT_SECRET as string,
+      {
+        expiresIn: ACCESS_TOKEN_EXPIRATION,
+      }
+    );
+    const newFreshToken = jwt.sign(
+      { userId: userData.id },
+      JWT_SECRET as string,
+      {
+        expiresIn: REFRESH_TOKEN_EXPIRATION,
+      }
+    );
+    //Delete cookies
+    res.cookie('accessToken', '', accessTokenCookieOptions(0));
+    res.cookie('refreshToken', '', refreshTokenCookieOptions(0));
+
+    //Set new Cookies for the new Tokens
+    res.cookie(
+      'accessToken',
+      newAccessToken,
+      accessTokenCookieOptions(Date.now() + ACCESS_COOKIE_EXPIRATION_MS)
+    );
+    res.cookie(
+      'refreshToken',
+      newFreshToken,
+      refreshTokenCookieOptions(Date.now() + REFRESH_COOKIE_EXPIRATION_MS)
+    );
+    res.json({ message: 'Tokens refreshed' });
+  } catch (error) {
+    res.status(403).json({ error: 'Invalid or expired refresh token' });
+  }
+});
 
 router.get('/isSignedIn', (req, res) => {
   const accessToken = req.headers['authorization'];
-
+  console.log(accessToken, 'zzzzz');
   console.log('access', accessToken);
   if (!accessToken) {
     return res
@@ -53,38 +99,52 @@ router.get('/logout', (req, res) => {
   res.redirect((process.env.FRONTEND_URL as string) + '/auth');
 });
 
-router.get('/', async (req, res) => {
+router.get('/google/callback', async (req, res) => {
   const { code } = req.query;
   const { tokens } = await oAuth2Client.getToken(code as string);
+
   try {
     await oAuth2Client.setCredentials(tokens);
 
     const { data }: { data: any } = await oAuth2Client.request({
       url: `https://www.googleapis.com/oauth2/v3/userinfo`,
     });
-    console.log(data);
-    let id = nanoid();
 
-    const accessToken = jwt.sign({ userId: data.id }, JWT_SECRET as string, {
-      expiresIn: ACCESS_TOKEN_EXPIRATION,
-    });
-    const refreshToken = jwt.sign({ userId: data.id }, JWT_SECRET as string, {
-      expiresIn: REFRESH_TOKEN_EXPIRATION,
-    });
-
-    const userCreated = await insertOrUpdateUser({
-      id: id,
-      email: data.email,
+    const user = {
+      id: nanoid(),
       name: data.name,
+      email: data.email,
       picture: data.picture,
-      accessToken: accessToken as string,
-      refreshToken: refreshToken as string,
       createdAt: new Date().toLocaleString('es-MX', { timeZone: 'UTC' }),
       updatedAt: new Date().toLocaleString('es-MX', { timeZone: 'UTC' }),
-    });
-    console.log(userCreated, 'created');
+    };
+    const [newUser] = await db
+      .insert(users)
+      .values(user)
+      .onConflictDoUpdate({
+        target: users.email,
+        set: {
+          name: user.name,
+          email: user.email,
+          picture: user.picture,
+          updatedAt: user.updatedAt,
+        },
+      })
+      .returning();
 
-    console.log('access', accessToken);
+    console.log(newUser, 'newUser');
+
+    const accessToken = jwt.sign({ userId: newUser.id }, JWT_SECRET as string, {
+      expiresIn: ACCESS_TOKEN_EXPIRATION,
+    });
+
+    const refreshToken = jwt.sign(
+      { userId: newUser.id },
+      JWT_SECRET as string,
+      {
+        expiresIn: REFRESH_TOKEN_EXPIRATION,
+      }
+    );
 
     res.cookie(
       'accessToken',
@@ -98,15 +158,13 @@ router.get('/', async (req, res) => {
       refreshToken,
       refreshTokenCookieOptions(Date.now() + REFRESH_COOKIE_EXPIRATION_MS)
     );
-    const params = new URLSearchParams();
+    // const params = new URLSearchParams();
     res.header('Content-Type', 'application/json');
     res.header('Authorization', `Bearer ${accessToken}`);
     // Agregar múltiples parámetros de consulta
-    params.append('accessToken', accessToken);
-    params.append('refreshToken', refreshToken);
-    return res.redirect(
-      (process.env.FRONTEND_URL as string) + `?${params.toString()}`
-    );
+    // params.append('accessToken', accessToken);
+    // params.append('refreshToken', refreshToken);
+    return res.redirect(process.env.FRONTEND_URL as string);
   } catch (error) {
     console.log('error with sign in with google', error);
   }
@@ -117,7 +175,7 @@ function accessTokenCookieOptions(expires_ms: number) {
   console.log(expires_ms);
   let cookieOptions: CookieOptions = {
     secure: true,
-    sameSite: 'strict',
+    sameSite: 'lax',
     path: '/',
     expires: new Date(expires_ms),
   };
@@ -128,28 +186,11 @@ function refreshTokenCookieOptions(expires_ms: number) {
   let cookieOptions: CookieOptions = {
     httpOnly: true,
     secure: true,
-    sameSite: 'strict',
+    sameSite: 'lax',
     path: '/',
     expires: new Date(expires_ms),
   };
   return cookieOptions;
 }
 
-const insertOrUpdateUser = async (user: User) => {
-  const [isUserOnDB] = await UserController.userExists(user.email as string);
-  console.log(isUserOnDB, 'exist');
-  return isUserOnDB
-    ? db
-        .update(users)
-        .set({
-          email: user.email,
-          name: user.name,
-          picture: user.picture,
-          accessToken: user.accessToken,
-          refreshToken: user.refreshToken,
-          updatedAt: user.updatedAt,
-        })
-        .where(eq(users.id, user.id as string))
-    : db.insert(users).values(user);
-};
 export default router;

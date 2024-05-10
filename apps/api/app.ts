@@ -5,14 +5,20 @@ import Pusher from 'pusher';
 import requestRouter from './routes/request';
 import authRouter from './routes/oauth';
 import friendRouter from './routes/friends';
+import friendRequestRouter from './routes/friendRequest';
 import userRouter from './routes/users';
 import dotenv from 'dotenv';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import cors from 'cors';
+import { UserController } from './controllers/UserController';
+import bodyParser from 'body-parser';
 dotenv.config();
 // Crea una instancia de la aplicación Express
 const app = express();
 app.use(cors());
 app.use(logger('dev'));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 // Define el puerto en el que la aplicación escuchará las solicitudes
 const PORT = process.env.PORT || 4000;
 // Inicia el servidor
@@ -24,16 +30,38 @@ app.use('/oauth', authRouter);
 app.use('/request', requestRouter);
 app.use('/users', isAuthenticated, userRouter);
 app.use('/friends', isAuthenticated, friendRouter);
+app.use('/friendRequest', isAuthenticated, friendRequestRouter);
 app.use(express.json());
 
-function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+async function isAuthenticated(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  console.log('IIIIII');
   const accessToken = req.headers['authorization'];
   console.log(accessToken, 'middleware');
   if (!accessToken) {
-    return res
-      .status(401)
-      .json({ isSignedIn: false, message: 'Sin iniciar sesión' });
+    return res.status(401).redirect('/auth');
   }
+  console.log('IIIIII2');
+
+  const { userId, exp } = jwt.verify(
+    accessToken,
+    process.env.JWT_SECRET as string
+  ) as JwtPayload;
+
+  console.log('IIIIII3', userId);
+  console.log('Expiration', exp);
+  console.log('Date Now', Date.now());
+
+  if (!userId) return res.status(401).redirect('/auth');
+  console.log('IIIIII4');
+
+  const [user] = await UserController.userExistsById(userId);
+  console.log(user, 'aaazzzz');
+  if (!user) return res.status(401).redirect('/auth');
+
   console.log(accessToken, 'pasopa');
   return next();
 }

@@ -4,8 +4,6 @@ export interface User {
   name: string | null;
   email: string | null;
   picture: string | null;
-  accessToken: string | null;
-  refreshToken: string | null;
   createdAt: string | null;
   updatedAt: string | null;
 }
@@ -14,17 +12,15 @@ export function validateStatus(status: any): boolean {
   return Object.values(Status).includes(status);
 }
 export enum Status {
-  SEND,
-  ACCEPTED,
-  DECLINED,
+  SEND = 'SENDED',
+  ACCEPTED = 'ACCEPTED',
+  DECLINED = 'DECLINED',
 }
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
   name: text('name'),
-  email: text('email'),
+  email: text('email').unique(),
   picture: text('picture'),
-  accessToken: text('accessToken'),
-  refreshToken: text('refreshToken'),
   createdAt: text('createdAt'),
   updatedAt: text('updatedAt'),
 });
@@ -49,7 +45,9 @@ export const friends = sqliteTable('friends', {
 export const friendRequests = sqliteTable('friendRequests', {
   id: text('id').primaryKey(),
   senderId: text('senderId').references(() => users.id),
-  receiverId: text('receiverId').references(() => users.id),
+  receiverId: text('receiverId')
+    .unique()
+    .references(() => users.id),
   status: text('status').$type<Status>(),
 });
 

@@ -12,8 +12,9 @@ const corsOptions = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
-export async function middleware(request: NextRequest) {
-  console.log(request.headers.get('Authorization'), 'Header');
+export async function middleware(request: NextRequest, re: NextResponse) {
+  console.log(request.headers, 'headersQ');
+  console.log(request.headers.get('Authorization'), 'HeaderQ');
   const nextUrl = request.nextUrl;
   const path = nextUrl.pathname;
   console.log(path, 'path');
@@ -24,10 +25,8 @@ export async function middleware(request: NextRequest) {
   const refreshToken = cookies().get('refreshToken')?.value;
 
   //refactor this
-  const searchParamsAT = nextUrl.searchParams.get('accessToken');
-  const searchParamsRF = nextUrl.searchParams.get('refreshToken');
   console.log('accessToken1', accessToken, 'refreshToken1', refreshToken);
-  const token = searchParamsAT ? searchParamsAT : accessToken;
+  const token = accessToken;
   console.log(token, 'aaa');
   const response = await fetch(process.env.STOOD_API + '/oauth/isSignedIn', {
     method: 'GET',
@@ -35,6 +34,7 @@ export async function middleware(request: NextRequest) {
       'Content-Type': 'application/json',
       Authorization: `${token}`,
     },
+    credentials: 'include',
   });
 
   if (!response.ok) {
@@ -43,6 +43,8 @@ export async function middleware(request: NextRequest) {
 
   const res = await response.json();
   console.log(res, 'respuesta');
+  //Validar el expire date con un date.now
+
   // 5. Redirect to /login if the user is not authenticated
   if (isProtectedRoute && !res.isSignedIn) {
     console.log('222');
@@ -90,7 +92,9 @@ export async function middleware(request: NextRequest) {
   // console.log('respuesta', res);
 
   // return NextResponse.redirect(new URL('/home', request.url));
-  return NextResponse.next();
+  const resp = NextResponse.next();
+  resp.cookies.set('userId', res?.user?.userId);
+  return resp;
 }
 
 // See "Matching Paths" below to learn more

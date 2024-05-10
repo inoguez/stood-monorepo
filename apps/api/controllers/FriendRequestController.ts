@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { db } from '../models/connection';
 import { UserController } from './UserController';
-import { Status, friendRequest, validateStatus } from '../models/schema';
+import { Status, friendRequests, validateStatus } from '../models/schema';
 import { nanoid } from 'nanoid';
 import { eq } from 'drizzle-orm';
 import { FriendController } from './FriendController';
@@ -13,24 +13,38 @@ export class FriendRequestController {
   static async sendFriendRequest(req: Request, res: Response): Promise<void> {
     try {
       // Obtiene los datos del cuerpo de la solicitud
+      console.log(req.body);
       const { senderId, email } = req.body;
-
+      console.log(senderId, 'sender');
       const [userRequestExist] = await UserController.userExists(email);
       if (!userRequestExist)
         res.status(404).json({ error: 'No existe ese usuario' });
       // Crea una nueva solicitud de amistad utilizando el modelo
-      const newRequest = await db.insert(friendRequest).values({
-        id: nanoid(),
-        senderId,
-        receiverId: userRequestExist.id,
-        status: Status.SEND,
-      });
-
+      const [newRequest] = await db
+        .insert(friendRequests)
+        .values({
+          id: nanoid(),
+          senderId,
+          receiverId: userRequestExist.id,
+          status: Status.SEND,
+        })
+        .onConflictDoNothing({ target: friendRequests.receiverId })
+        .returning();
+      console.log(newRequest, 'new');
       // Envía la respuesta con la nueva solicitud creada
-      res.status(201).json(newRequest);
+      res
+        .status(201)
+        .json({
+          message: newRequest
+            ? 'Se envió la solicitud de amistad!'
+            : 'Ya existe una solicitud pendiente',
+          newRequest,
+        });
     } catch (error) {
       // Maneja los errores
-      res.status(500).json({ error: 'Error al enviar solicitud de amistad' });
+      res
+        .status(500)
+        .json({ error: 'Error al enviar solicitud de amistad' + error });
     }
   }
 
@@ -44,13 +58,13 @@ export class FriendRequestController {
       const userId = req.params.userId;
 
       // Busca todas las solicitudes de amistad del usuario en la base de datos
-      const friendRequests = await db
+      const friendRequest = await db
         .select()
-        .from(friendRequest)
-        .where(eq(friendRequest.receiverId, userId));
+        .from(friendRequests)
+        .where(eq(friendRequests.receiverId, userId));
 
       // Envía la respuesta con las solicitudes encontradas
-      res.status(200).json(friendRequests);
+      res.status(200).json(friendRequest);
     } catch (error) {
       // Maneja los errores
       res
@@ -77,8 +91,8 @@ export class FriendRequestController {
       // Busca la solicitud de amistad en la base de datos
       const [request] = await db
         .select()
-        .from(friendRequest)
-        .where(eq(friendRequest.id, requestId));
+        .from(friendRequests)
+        .where(eq(friendRequests.id, requestId));
 
       // Verifica si la solicitud existe
       if (!request) {
@@ -112,7 +126,7 @@ export class FriendRequestController {
 
       // Actualiza el estado de la solicitud
       const requestUpdated = await db
-        .update(friendRequest)
+        .update(friendRequests)
         .set({ status: action as Status });
       // Envía la respuesta con el estado actualizado de la solicitud
       res.status(200).json(requestUpdated);
