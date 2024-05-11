@@ -1,11 +1,13 @@
 import { InferInsertModel, InferSelectModel } from 'drizzle-orm';
-import { users } from '../api/models/schema';
-import { chats } from '../api/models/schema';
-import { userChats } from '../api/models/schema';
-import { friends } from '../api/models/schema';
-import { friendRequests } from '../api/models/schema';
-import { messages } from '../api/models/schema';
-import { notifications } from '../api/models/schema';
+import {
+  users,
+  chats,
+  userChats,
+  friends,
+  friendRequests,
+  messages,
+  notifications,
+} from '@stood/database';
 
 export type SelectUser = InferSelectModel<typeof users>;
 export type InsertUser = InferInsertModel<typeof users>;

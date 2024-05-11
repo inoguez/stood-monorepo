@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { db } from '../models/connection';
-import { friends } from '../models/schema';
+import { db } from '@stood/database';
+import { friends } from '@stood/database';
 import { nanoid } from 'nanoid';
 import { and, eq } from 'drizzle-orm';
 import { UserController } from './UserController';

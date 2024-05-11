@@ -1,0 +1,13 @@
+{
+  "version": "6",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1715466049243,
+      "tag": "0000_salty_sphinx",
+      "breakpoints": true
+    }
+  ]
+}

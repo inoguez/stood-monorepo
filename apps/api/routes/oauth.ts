@@ -1,8 +1,7 @@
 import { OAuth2Client } from 'google-auth-library';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import express, { CookieOptions } from 'express';
-import { db } from '../models/connection';
-import { users } from '../models/schema';
+import { db, users } from '@stood/database';
 import { nanoid } from 'nanoid';
 import dotenv from 'dotenv';
 import { sql } from 'drizzle-orm';

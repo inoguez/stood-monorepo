@@ -11,4 +11,5 @@ export default {
   },
   verbose: true,
   strict: true,
+  dialect: 'sqlite',
 } satisfies Config;

@@ -5,7 +5,6 @@ dist
 .turbo
 
 # dependencies
-/node_modules
 /.pnp
 .pnp.js
 .yarn/install-state.gz
@@ -40,5 +39,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+**/node_modules
 #db
-migrations

@@ -1,8 +1,6 @@
-import Error from 'next/error';
-import { redirect } from 'next/navigation';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { cookies, headers } from 'next/headers';
+import { cookies } from 'next/headers';
 
 const protectedRoutes = ['/'];
 const publicRoutes = ['/auth', '/signup'];
@@ -28,6 +26,7 @@ export async function middleware(request: NextRequest, re: NextResponse) {
   console.log('accessToken1', accessToken, 'refreshToken1', refreshToken);
   const token = accessToken;
   console.log(token, 'aaa');
+  console.log(process.env.STOOD_API, 'zzzz');
   const response = await fetch(process.env.STOOD_API + '/oauth/isSignedIn', {
     method: 'GET',
     headers: {

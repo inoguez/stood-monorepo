@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
-import { friendRequests, notifications } from '../models/schema';
-import { db } from '../models/connection';
+import { db, friendRequests, notifications } from '@stood/database';
 import { eq } from 'drizzle-orm';
 import { AuthenticatedRequest } from '../app';
 

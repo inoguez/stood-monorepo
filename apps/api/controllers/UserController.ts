@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
-import { db } from '../models/connection';
-import { SelectUser, users } from '../models/schema';
+import { SelectUser, db } from '@stood/database';
+
+import { users } from '@stood/database';
 import { nanoid } from 'nanoid';
 import { and, eq, like, ne, not } from 'drizzle-orm';
 import jwt, { JwtPayload } from 'jsonwebtoken';

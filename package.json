@@ -1,21 +1,31 @@
 {
   "name": "stood-monorepo",
   "version": "1.0.0",
+  "private": true,
   "description": "",
-  "main": "index.js",
+  "keywords": [],
+  "author": "Ian Noguez",
+  "license": "ISC",
   "scripts": {
+    "db:generate": "turbo db:generate",
+    "db:push": "turbo db:push",
+    "db:check": "turbo db:check",
+    "db:studio": "turbo db:studio",
     "dev": "turbo dev",
     "start": "turbo start",
     "build": "turbo build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "Ian Noguez",
-  "license": "ISC",
-  "workspaces": [
-    "apps/*"
-  ],
   "devDependencies": {
-    "turbo": "^1.13.2"
-  }
+    "prettier": "^3.2.5",
+    "turbo": "latest"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "npm@10.5.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

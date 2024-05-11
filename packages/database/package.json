@@ -1,0 +1,22 @@
+{
+  "name": "@stood/database",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "scripts": {
+    "db:check": "drizzle-kit check",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.21.1",
+    "dotenv": "^16.4.5",
+    "typescript": "latest"
+  }
+}

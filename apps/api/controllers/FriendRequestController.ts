@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { db } from '../models/connection';
+import { db } from '@stood/database';
 import { UserController } from './UserController';
-import { Status, friendRequests, notifications } from '../models/schema';
+import { Status, friendRequests, notifications } from '@stood/database';
 import { nanoid } from 'nanoid';
 import { eq, sql } from 'drizzle-orm';
 import { FriendController } from './FriendController';

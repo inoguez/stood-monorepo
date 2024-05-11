@@ -27,7 +27,8 @@
     "socket.io-client": "4.7.5",
     "sonner": "^1.4.41",
     "tailwindcss-animate": "^1.0.7",
-    "vaul": "^0.9.1"
+    "vaul": "^0.9.1",
+    "@stood/database": "*"
   },
   "devDependencies": {
     "@types/node": "^20",
