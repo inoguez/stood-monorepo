@@ -1,22 +1,35 @@
 import { Request, Response } from 'express';
 import { db } from '../models/connection';
 import { UserController } from './UserController';
-import { Status, friendRequests, validateStatus } from '../models/schema';
+import { Status, friendRequests, notifications } from '../models/schema';
 import { nanoid } from 'nanoid';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { FriendController } from './FriendController';
 import { replaceRequestBody } from '../utils/replaceRequestBody';
+import { validateStatus } from '../utils/validateStatus';
+import { AuthenticatedRequest } from '../app';
 
 // Controlador para manejar las operaciones relacionadas con las solicitudes de amistad
 export class FriendRequestController {
   // Método para enviar una solicitud de amistad
-  static async sendFriendRequest(req: Request, res: Response): Promise<void> {
+  static async sendFriendRequest(
+    req: AuthenticatedRequest,
+    res: Response
+  ): Promise<void> {
     try {
       // Obtiene los datos del cuerpo de la solicitud
       console.log(req.body);
+      const userId = req.userId as string;
       const { senderId, email } = req.body;
-      console.log(senderId, 'sender');
+
+      console.log(userId, 'sender');
+      const [userSender] = await UserController.userExistsById(userId);
+      if (!userSender)
+        res
+          .status(404)
+          .json({ error: 'No existe el usuario que envia la solicitud ' });
       const [userRequestExist] = await UserController.userExists(email);
+
       if (!userRequestExist)
         res.status(404).json({ error: 'No existe ese usuario' });
       // Crea una nueva solicitud de amistad utilizando el modelo
@@ -24,22 +37,37 @@ export class FriendRequestController {
         .insert(friendRequests)
         .values({
           id: nanoid(),
-          senderId,
+          senderId: userId,
           receiverId: userRequestExist.id,
           status: Status.SEND,
         })
-        .onConflictDoNothing({ target: friendRequests.receiverId })
+        .onConflictDoNothing()
         .returning();
-      console.log(newRequest, 'new');
+
+      if (!newRequest)
+        res.status(404).json({ error: 'No se pudo crear el la solicitud' });
+      console.log(newRequest, 'newRequest');
+
+      const [newNotification] = await db
+        .insert(notifications)
+        .values({
+          id: nanoid(),
+          createdAt: sql<string>`(CURRENT_TIMESTAMP)`,
+          friendRequestsId: newRequest.id,
+          message: `${userSender.name} te envió una solicitud de amistad`,
+          userId: userRequestExist.id,
+        })
+        .onConflictDoNothing()
+        .returning();
+      if (!newNotification)
+        res.status(404).json({ error: 'No se pudo crear el la notificacion' });
       // Envía la respuesta con la nueva solicitud creada
-      res
-        .status(201)
-        .json({
-          message: newRequest
-            ? 'Se envió la solicitud de amistad!'
-            : 'Ya existe una solicitud pendiente',
-          newRequest,
-        });
+      res.status(201).json({
+        message: newRequest
+          ? 'Se envió la solicitud de amistad!'
+          : 'Ya existe una solicitud pendiente',
+        newRequest,
+      });
     } catch (error) {
       // Maneja los errores
       res
@@ -50,18 +78,19 @@ export class FriendRequestController {
 
   // Método para obtener todas las solicitudes de amistad de un usuario
   static async getAllFriendRequests(
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response
   ): Promise<void> {
     try {
       // Obtiene el ID del usuario de la solicitud
-      const userId = req.params.userId;
+      const userId = req.userId;
+      console.log(userId, 'userrrrrrr');
 
       // Busca todas las solicitudes de amistad del usuario en la base de datos
       const friendRequest = await db
         .select()
         .from(friendRequests)
-        .where(eq(friendRequests.receiverId, userId));
+        .where(eq(friendRequests.receiverId, userId as string));
 
       // Envía la respuesta con las solicitudes encontradas
       res.status(200).json(friendRequest);

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '../models/connection';
-import { User, users } from '../models/schema';
+import { SelectUser, users } from '../models/schema';
 import { nanoid } from 'nanoid';
 import { and, eq, like, ne, not } from 'drizzle-orm';
 import jwt, { JwtPayload } from 'jsonwebtoken';
@@ -94,7 +94,7 @@ export class UserController {
     }
   }
 
-  static async userExists(email: string): Promise<User[]> {
+  static async userExists(email: string): Promise<SelectUser[]> {
     // Busca un usuario con el correo electrónico proporcionado
     const isUserOnDB = await db
       .select()
@@ -102,10 +102,8 @@ export class UserController {
       .where(eq(users.email, email as string));
     return isUserOnDB; // Devuelve un array con el usuario existe, de lo contrario manda un array vació
   }
-  static async userExistsById(id: string): Promise<User[]> {
+  static async userExistsById(id: string): Promise<SelectUser[]> {
     // Busca un usuario con el correo electrónico proporcionado
-
-    console.log(id, 'iddd');
     const isUserOnDB = await db
       .select()
       .from(users)

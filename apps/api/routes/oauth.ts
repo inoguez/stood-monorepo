@@ -5,6 +5,7 @@ import { db } from '../models/connection';
 import { users } from '../models/schema';
 import { nanoid } from 'nanoid';
 import dotenv from 'dotenv';
+import { sql } from 'drizzle-orm';
 dotenv.config();
 
 const redirectUrl = process.env.REDIRECT_URL;
@@ -99,7 +100,7 @@ router.get('/logout', (req, res) => {
   res.redirect((process.env.FRONTEND_URL as string) + '/auth');
 });
 
-router.get('/google/callback', async (req, res) => {
+router.get('/', async (req, res) => {
   const { code } = req.query;
   const { tokens } = await oAuth2Client.getToken(code as string);
 
@@ -115,9 +116,9 @@ router.get('/google/callback', async (req, res) => {
       name: data.name,
       email: data.email,
       picture: data.picture,
-      createdAt: new Date().toLocaleString('es-MX', { timeZone: 'UTC' }),
-      updatedAt: new Date().toLocaleString('es-MX', { timeZone: 'UTC' }),
+      updatedAt: sql<string>`(CURRENT_TIMESTAMP)`,
     };
+
     const [newUser] = await db
       .insert(users)
       .values(user)
@@ -158,12 +159,7 @@ router.get('/google/callback', async (req, res) => {
       refreshToken,
       refreshTokenCookieOptions(Date.now() + REFRESH_COOKIE_EXPIRATION_MS)
     );
-    // const params = new URLSearchParams();
-    res.header('Content-Type', 'application/json');
-    res.header('Authorization', `Bearer ${accessToken}`);
-    // Agregar múltiples parámetros de consulta
-    // params.append('accessToken', accessToken);
-    // params.append('refreshToken', refreshToken);
+
     return res.redirect(process.env.FRONTEND_URL as string);
   } catch (error) {
     console.log('error with sign in with google', error);

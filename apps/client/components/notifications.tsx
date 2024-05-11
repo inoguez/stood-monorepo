@@ -7,21 +7,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Bell } from 'lucide-react';
+import { Ban, Bell, Check } from 'lucide-react';
+import { Button } from './ui/button';
 
-export const Notifications = () => {
+export const Notifications = ({ notifications = [] }) => {
+  console.log(notifications);
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
+      <DropdownMenuTrigger className='bg-neutral-700 aspect-square rounded-full px-2 hover:bg-neutral-400 hover:text-neutral-800'>
         <Bell />
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+      <DropdownMenuContent align='start'>
+        <DropdownMenuLabel>Notificaciones</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Profile</DropdownMenuItem>
-        <DropdownMenuItem>Billing</DropdownMenuItem>
-        <DropdownMenuItem>Team</DropdownMenuItem>
-        <DropdownMenuItem>Subscription</DropdownMenuItem>
+        {notifications?.map((e: any) => (
+          <div className='px-2 text-sm flex gap-3 items-center' key={e?.id}>
+            <span>{e?.message}</span>
+            <Button size={'sm'} variant={'secondary'}>
+              <Check className='text-xs' />
+            </Button>
+            <Button size={'sm'} variant={'destructive'}>
+              <Ban className='text-xs' />
+            </Button>
+          </div>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

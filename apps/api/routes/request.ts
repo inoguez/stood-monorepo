@@ -9,7 +9,7 @@ router.post('/', async (req, res, next) => {
   res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
   res.header('Referrer-Policy', 'no-referrer-when-downgrade');
 
-  const redirectUrl = 'http://localhost:4000/oauth/google/callback';
+  const redirectUrl = 'http://localhost:4000/oauth';
 
   const oAuth2Client = new OAuth2Client(
     process.env.CLIENT_ID,

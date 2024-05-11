@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, UserPlus } from 'lucide-react';
+import { Check, Plus, UserPlus } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -17,8 +17,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { useEffect, useState } from 'react';
-import { User, friendRequests } from '../../../api/models/schema';
+import { useActionState, useEffect, useRef, useState } from 'react';
+import { friendRequests } from '../../../api/models/schema';
 import Image from 'next/image';
 import {
   Drawer,
@@ -31,16 +31,22 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 import { sendFriendRequest } from '@/app/actions/sendFriendRequest';
+import { useFormStatus } from 'react-dom';
+import { toast } from 'sonner';
 export function ComboboxDemo({
   searchQuery,
 }: {
-  searchQuery: (term: string) => Promise<User[]>;
+  searchQuery: (term: string) => Promise<any[]>;
 }) {
   console.log();
   const [open, setOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [value, setValue] = useState({ id: '', name: '', email: '' });
-  const [items, setItems] = useState<User[]>([]);
+  const [items, setItems] = useState<any[]>([]);
+  const formRef = useRef(null);
+
+  const { pending } = useFormStatus();
+
   console.log(value);
   useEffect(() => {
     console.log('aa');
@@ -75,18 +81,21 @@ export function ComboboxDemo({
             : 'aaa'} */}
           </Button>
         </PopoverTrigger>
-        <PopoverContent align='start' className='w-[200px] p-0'>
+        <PopoverContent align='start' className='w-auto p-0'>
           <Command shouldFilter={false}>
             <CommandList>
               <CommandInput
                 placeholder='Escribe un email'
                 onValueChange={(term) => onChange(term)}
               />
-              <CommandEmpty>Usuarios encontrados con ese email</CommandEmpty>
+              <CommandEmpty className='px-4 text-center'>
+                Usuarios no encontrados
+              </CommandEmpty>
 
               <CommandGroup>
-                {items?.map((user: User) => (
+                {items?.map((user: any) => (
                   <CommandItem
+                    className=''
                     key={user.id}
                     value={user.id}
                     onSelect={(currentValue) => {
@@ -98,7 +107,11 @@ export function ComboboxDemo({
                       setOpen(false);
                     }}
                   >
-                    <div className='grid grid-cols-[auto_1fr] gap-2 items-center h-5'>
+                    <div
+                      key={user?.id}
+                      className='grid grid-cols-[auto_auto_1fr] gap-2 items-center h-auto text-neutral-600'
+                    >
+                      <Plus />
                       <Image
                         src={user?.picture as string}
                         width={20}
@@ -137,9 +150,29 @@ export function ComboboxDemo({
             </DrawerHeader>
 
             <DrawerFooter>
-              <form action={sendFriendRequest} className='w-full'>
-                <input type='text' name='email' value={value.email} hidden />
-                <Button type='submit' className='w-full'>
+              <form
+                ref={formRef}
+                action={async (FormData: FormData) => {
+                  const data = await sendFriendRequest(FormData);
+                  setDrawerOpen(false);
+                  if (data?.error) {
+                    toast(data.error);
+                  }
+                }}
+                className='w-full'
+              >
+                <input
+                  type='text'
+                  name='email'
+                  defaultValue={value.email}
+                  hidden
+                />
+                <Button
+                  variant={'alternative'}
+                  type='submit'
+                  className='w-full'
+                  disabled={pending}
+                >
                   Enviar
                 </Button>
               </form>

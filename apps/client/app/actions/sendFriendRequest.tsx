@@ -28,6 +28,8 @@ export async function sendFriendRequest(formData: FormData) {
 
     const data = await response.json();
     console.log('Datos recibidos:', data);
+    // const msg = data?.message ? data.message : data?.error;
+    // toast(msg);
 
     return data;
 

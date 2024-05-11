@@ -6,6 +6,7 @@ import requestRouter from './routes/request';
 import authRouter from './routes/oauth';
 import friendRouter from './routes/friends';
 import friendRequestRouter from './routes/friendRequest';
+import notificationRouter from './routes/notifications';
 import userRouter from './routes/users';
 import dotenv from 'dotenv';
 import jwt, { JwtPayload } from 'jsonwebtoken';
@@ -31,38 +32,35 @@ app.use('/request', requestRouter);
 app.use('/users', isAuthenticated, userRouter);
 app.use('/friends', isAuthenticated, friendRouter);
 app.use('/friendRequest', isAuthenticated, friendRequestRouter);
+app.use('/notifications', isAuthenticated, notificationRouter);
+
 app.use(express.json());
 
+export interface AuthenticatedRequest extends Request {
+  userId?: string; // Define userId como opcional
+}
+
 async function isAuthenticated(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) {
-  console.log('IIIIII');
   const accessToken = req.headers['authorization'];
-  console.log(accessToken, 'middleware');
+  console.log('uuuuu1111');
   if (!accessToken) {
     return res.status(401).redirect('/auth');
   }
-  console.log('IIIIII2');
-
   const { userId, exp } = jwt.verify(
     accessToken,
     process.env.JWT_SECRET as string
   ) as JwtPayload;
 
-  console.log('IIIIII3', userId);
-  console.log('Expiration', exp);
-  console.log('Date Now', Date.now());
-
   if (!userId) return res.status(401).redirect('/auth');
-  console.log('IIIIII4');
 
   const [user] = await UserController.userExistsById(userId);
-  console.log(user, 'aaazzzz');
   if (!user) return res.status(401).redirect('/auth');
-
-  console.log(accessToken, 'pasopa');
+  console.log('222222xdxd', userId);
+  req.userId = user.id;
   return next();
 }
 
