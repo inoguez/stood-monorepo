@@ -1,4 +1,5 @@
 'use client';
+
 import { logout } from '@/app/actions/logout';
 import {
   DropdownMenu,

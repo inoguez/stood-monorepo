@@ -60,12 +60,12 @@ export class FriendRequestController {
         .onConflictDoNothing()
         .returning();
       if (!newNotification)
-        res.status(404).json({ error: 'No se pudo crear el la notificacion' });
+        res
+          .status(404)
+          .json({ error: 'Ya existe una solicitud de amistad a este usuario' });
       // Envía la respuesta con la nueva solicitud creada
       res.status(201).json({
-        message: newRequest
-          ? 'Se envió la solicitud de amistad!'
-          : 'Ya existe una solicitud pendiente',
+        message: 'Se envió la solicitud de amistad!',
         newRequest,
       });
     } catch (error) {
@@ -104,10 +104,11 @@ export class FriendRequestController {
 
   // Método para aceptar o rechazar una solicitud de amistad
   static async respondToFriendRequest(
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response
   ): Promise<void> {
     try {
+      const userId = req.userId as string;
       // Obtiene el ID de la solicitud de amistad y la acción del cuerpo de la solicitud
       const { requestId, action } = req.body;
 

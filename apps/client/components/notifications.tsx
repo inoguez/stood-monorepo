@@ -20,17 +20,38 @@ export const Notifications = ({ notifications = [] }) => {
       <DropdownMenuContent align='start'>
         <DropdownMenuLabel>Notificaciones</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {notifications?.map((e: any) => (
-          <div className='px-2 text-sm flex gap-3 items-center' key={e?.id}>
-            <span>{e?.message}</span>
-            <Button size={'sm'} variant={'secondary'}>
-              <Check className='text-xs' />
-            </Button>
-            <Button size={'sm'} variant={'destructive'}>
-              <Ban className='text-xs' />
-            </Button>
-          </div>
-        ))}
+        {notifications?.map((e: any) => {
+          console.log(e);
+          return (
+            <div className='px-2 text-sm flex gap-3 items-center' key={e?.id}>
+              <span>{e?.message}</span>
+              <Button
+                onClick={async () => {
+                  const formData = new FormData();
+                  formData.append('requestId', e.friendRequestsId.id);
+                }}
+                size={'sm'}
+                variant={'secondary'}
+              >
+                <Check className='text-xs' />
+              </Button>
+              <Button size={'sm'} variant={'destructive'}>
+                <Ban className='text-xs' />
+              </Button>
+            </div>
+          );
+          return (
+            <div className='px-2 text-sm flex gap-3 items-center' key={e?.id}>
+              <span>{e?.message}</span>
+              <Button size={'sm'} variant={'secondary'}>
+                <Check className='text-xs' />
+              </Button>
+              <Button size={'sm'} variant={'destructive'}>
+                <Ban className='text-xs' />
+              </Button>
+            </div>
+          );
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );

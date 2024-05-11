@@ -65,7 +65,11 @@ export function ComboboxDemo({
     console.log(data);
     setItems(data);
   }
-
+  async function sendRequest(formData: FormData) {
+    const data = await sendFriendRequest(formData);
+    setDrawerOpen(false);
+    toast(data?.error ? data?.error : data?.message);
+  }
   return (
     <>
       <Popover open={open} onOpenChange={setOpen}>
@@ -150,17 +154,7 @@ export function ComboboxDemo({
             </DrawerHeader>
 
             <DrawerFooter>
-              <form
-                ref={formRef}
-                action={async (FormData: FormData) => {
-                  const data = await sendFriendRequest(FormData);
-                  setDrawerOpen(false);
-                  if (data?.error) {
-                    toast(data.error);
-                  }
-                }}
-                className='w-full'
-              >
+              <form ref={formRef} action={sendRequest} className='w-full'>
                 <input
                   type='text'
                   name='email'

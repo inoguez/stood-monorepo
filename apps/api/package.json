@@ -28,8 +28,8 @@
     "google-auth-library": "^9.9.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "1.10.0",
-    "nanoid": "^5.0.7",
-    "pusher": "^5.2.0"
+    "pusher": "^5.2.0",
+    "nanoid": "^5.0.7"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.6",
