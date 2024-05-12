@@ -13,6 +13,7 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 import cors from 'cors';
 import { UserController } from './controllers/UserController';
 import bodyParser from 'body-parser';
+
 dotenv.config();
 // Crea una instancia de la aplicación Express
 const app = express();
@@ -46,7 +47,6 @@ async function isAuthenticated(
   next: NextFunction
 ) {
   const accessToken = req.headers['authorization'];
-  console.log('uuuuu1111');
   if (!accessToken) {
     return res.status(401).redirect('/auth');
   }
@@ -59,8 +59,8 @@ async function isAuthenticated(
 
   const [user] = await UserController.userExistsById(userId);
   if (!user) return res.status(401).redirect('/auth');
-  console.log('222222xdxd', userId);
   req.userId = user.id;
+  console.log('Middleware passed');
   return next();
 }
 

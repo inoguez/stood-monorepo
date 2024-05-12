@@ -12,11 +12,16 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "main": "dist/index.js",
+    "dev": "bun --watch index.ts",
     "build": "tsc"
   },
-  "devDependencies": {
-    "drizzle-kit": "^0.21.1",
+  "dependencies": {
+    "@libsql/client": "^0.6.0",
     "dotenv": "^16.4.5",
+    "drizzle-kit": "^0.21.1"
+  },
+  "devDependencies": {
     "typescript": "latest"
   }
 }
