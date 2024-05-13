@@ -71,12 +71,15 @@ export const Notifications = async ({
       <DropdownMenuContent align='start'>
         <DropdownMenuLabel>Notificaciones</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {notificationList?.map((item: Notifications) => {
-          console.log(item);
-
+        {notificationList.length === 0 && (
+          <div className=' grid place-content-center h-full p-4'>
+            <span>Sin notificaciones </span>
+          </div>
+        )}
+        {notificationList?.map((item: Notifications, index: any) => {
           return (
             <div
-              className='px-2 text-sm flex gap-3 items-center'
+              className='px-2 text-sm flex gap-3 items-center rounded-2xl'
               key={item?.notifications?.id}
             >
               <span>{item?.notifications?.message}</span>

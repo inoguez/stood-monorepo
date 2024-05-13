@@ -83,18 +83,19 @@ export function ComboboxDemo({
             : 'aaa'} */}
           </Button>
         </PopoverTrigger>
-        <PopoverContent align='start' className='w-auto p-0'>
-          <Command shouldFilter={false}>
-            <CommandList>
+        <PopoverContent align='start' className='w-auto p-0 rounded-2xl'>
+          <Command shouldFilter={false} className='rounded-2xl'>
+            <CommandList className='rounded-2xl'>
               <CommandInput
+                className='rounded-2xl'
                 placeholder='Escribe un email'
                 onValueChange={(term) => onChange(term)}
               />
-              <CommandEmpty className='px-4 text-center'>
+              <CommandEmpty className='my-5 text-center'>
                 Usuarios no encontrados
               </CommandEmpty>
 
-              <CommandGroup>
+              <CommandGroup className='rounded-2xl'>
                 {items?.map((user: any) => (
                   <CommandItem
                     className=''
