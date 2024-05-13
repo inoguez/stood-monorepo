@@ -24,7 +24,7 @@ export const SelfItem: React.FC<Props> = ({ className, user }) => {
         alt='Profile Image'
         className='rounded-full'
       />
-      <span className='flex-1'>{user.name}</span>
+      <span className='flex-1'>{user?.name}</span>
     </div>
   );
 };

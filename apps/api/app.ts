@@ -46,20 +46,27 @@ async function isAuthenticated(
   res: Response,
   next: NextFunction
 ) {
+  console.log('middle');
   const accessToken = req.headers['authorization'];
   if (!accessToken) {
     return res.status(401).redirect('/auth');
   }
-  const { userId, exp } = jwt.verify(
-    accessToken,
-    process.env.JWT_SECRET as string
-  ) as JwtPayload;
 
-  if (!userId) return res.status(401).redirect('/auth');
+  try {
+    const { userId, exp } = jwt.verify(
+      accessToken,
+      process.env.JWT_SECRET as string
+    ) as JwtPayload;
 
-  const [user] = await UserController.userExistsById(userId);
-  if (!user) return res.status(401).redirect('/auth');
-  req.userId = user.id;
+    console.log('aaaaa');
+    if (!userId) return res.status(401).redirect('/auth');
+
+    const [user] = await UserController.userExistsById(userId);
+    if (!user) return res.status(401).redirect('/auth');
+    req.userId = user.id;
+  } catch (error) {
+    console.log(error, 'error');
+  }
   console.log('Middleware passed');
   return next();
 }
@@ -71,7 +78,7 @@ async function isAuthenticated(
 //   res.send(usuarios);
 // });
 
-const pusher = new Pusher({
+export const pusher = new Pusher({
   appId: process.env.APP_ID as string,
   key: process.env.PUSHER_KEY as string,
   secret: process.env.PUSHER_SECRET as string,

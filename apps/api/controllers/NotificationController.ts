@@ -12,18 +12,7 @@ export class NotificationController {
     try {
       const userId = req.userId;
       const userNotifications = await db
-        .select({
-          id: notifications.id,
-          userId: notifications.userId,
-          message: notifications.message,
-          createdAt: notifications.createdAt,
-          friendRequestsId: {
-            id: friendRequests.id,
-            senderId: friendRequests.senderId,
-            receiverId: friendRequests.receiverId,
-            status: friendRequests.status,
-          },
-        })
+        .select()
         .from(notifications)
         .where(eq(notifications.userId, userId as string))
         .fullJoin(

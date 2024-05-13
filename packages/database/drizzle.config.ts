@@ -1,7 +1,7 @@
-import type { Config } from 'drizzle-kit';
+import { defineConfig } from 'drizzle-kit';
 import dotenv from 'dotenv';
 dotenv.config();
-export default {
+export default defineConfig({
   schema: './models/schema.ts',
   out: './models/migrations',
   driver: 'turso',
@@ -12,4 +12,4 @@ export default {
   verbose: true,
   strict: true,
   dialect: 'sqlite',
-} satisfies Config;
+});

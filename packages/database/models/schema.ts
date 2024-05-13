@@ -1,12 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { text, sqliteTable } from 'drizzle-orm/sqlite-core';
 
-export enum Status {
-  SEND = 'SENDED',
-  ACCEPTED = 'ACCEPTED',
-  DECLINED = 'DECLINED',
-}
-
 export const users = sqliteTable('users', {
   id: text('id').primaryKey().unique(),
   name: text('name'),
@@ -23,23 +17,27 @@ export const chats = sqliteTable('chats', {
 
 export const userChats = sqliteTable('userChats', {
   id: text('id').primaryKey(),
-  userId: text('userId').references(() => users.id),
-  chatId: text('chatId').references(() => chats.id),
+  userId: text('userId').references(() => users.id, { onDelete: 'cascade' }),
+  chatId: text('chatId').references(() => chats.id, { onDelete: 'cascade' }),
 });
 
 export const friends = sqliteTable('friends', {
   id: text('id').primaryKey(),
-  userId: text('userId').references(() => users.id),
-  friendId: text('friendId').references(() => users.id),
+  userId: text('userId').references(() => users.id, { onDelete: 'cascade' }),
+  friendId: text('friendId').references(() => users.id, {
+    onDelete: 'cascade',
+  }),
 });
 
 export const friendRequests = sqliteTable('friendRequests', {
   id: text('id').primaryKey(),
-  senderId: text('senderId').references(() => users.id),
+  senderId: text('senderId').references(() => users.id, {
+    onDelete: 'cascade',
+  }),
   receiverId: text('receiverId')
     .unique()
-    .references(() => users.id),
-  status: text('status').$type<Status>(),
+    .references(() => users.id, { onDelete: 'cascade' }),
+  status: text('status', { enum: ['SENDED', 'ACCEPTED', 'DECLINED'] }),
 });
 
 export const messages = sqliteTable('messages', {
@@ -48,18 +46,18 @@ export const messages = sqliteTable('messages', {
   createdAt: text('createdAt'),
   chatId: text('chatId')
     .unique()
-    .references(() => chats.id),
+    .references(() => chats.id, { onDelete: 'cascade' }),
   senderId: text('senderId')
     .unique()
-    .references(() => users.id),
+    .references(() => users.id, { onDelete: 'cascade' }),
 });
 
 export const notifications = sqliteTable('notifications', {
   id: text('id').primaryKey(),
-  userId: text('userId').references(() => users.id),
+  userId: text('userId').references(() => users.id, { onDelete: 'cascade' }),
   message: text('message'),
   createdAt: text('createdAt'),
   friendRequestsId: text('friendRequestsId')
     .unique()
-    .references(() => friendRequests.id),
+    .references(() => friendRequests.id, { onDelete: 'cascade' }),
 });

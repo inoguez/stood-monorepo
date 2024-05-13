@@ -1,13 +1,12 @@
 import { Request, Response } from 'express';
-import { db } from '@stood/database';
+import { db, friends, messages } from '@stood/database';
 import { UserController } from './UserController';
-import { Status, friendRequests, notifications } from '@stood/database';
+import { friendRequests, notifications } from '@stood/database';
 import { nanoid } from 'nanoid';
-import { eq, sql } from 'drizzle-orm';
+import { eq, or, sql } from 'drizzle-orm';
 import { FriendController } from './FriendController';
 import { replaceRequestBody } from '../utils/replaceRequestBody';
-import { validateStatus } from '../utils/validateStatus';
-import { AuthenticatedRequest } from '../app';
+import { AuthenticatedRequest, pusher } from '../app';
 
 // Controlador para manejar las operaciones relacionadas con las solicitudes de amistad
 export class FriendRequestController {
@@ -20,18 +19,48 @@ export class FriendRequestController {
       // Obtiene los datos del cuerpo de la solicitud
       console.log(req.body);
       const userId = req.userId as string;
-      const { senderId, email } = req.body;
+      const { email } = req.body;
 
       console.log(userId, 'sender');
       const [userSender] = await UserController.userExistsById(userId);
-      if (!userSender)
+      if (!userSender) {
         res
           .status(404)
           .json({ error: 'No existe el usuario que envia la solicitud ' });
+        return;
+      }
+
       const [userRequestExist] = await UserController.userExists(email);
 
-      if (!userRequestExist)
+      if (!userRequestExist) {
         res.status(404).json({ error: 'No existe ese usuario' });
+        return;
+      }
+
+      const [requestExistForSender] = await db
+        .select()
+        .from(friendRequests)
+        .where(
+          or(
+            eq(friendRequests.senderId, userId),
+            eq(friendRequests.receiverId, userRequestExist.id)
+          )
+        );
+      const [requestExistForReceiver] = await db
+        .select()
+        .from(friendRequests)
+        .where(
+          or(
+            eq(friendRequests.receiverId, userId),
+            eq(friendRequests.senderId, userRequestExist.id)
+          )
+        );
+      if (requestExistForSender || requestExistForReceiver) {
+        res.status(404).json({
+          error: 'Ya existe una solicitud de alguno de los dos usuarios',
+        });
+        return;
+      }
       // Crea una nueva solicitud de amistad utilizando el modelo
       const [newRequest] = await db
         .insert(friendRequests)
@@ -39,13 +68,15 @@ export class FriendRequestController {
           id: nanoid(),
           senderId: userId,
           receiverId: userRequestExist.id,
-          status: Status.SEND,
+          status: 'SENDED',
         })
         .onConflictDoNothing()
         .returning();
 
-      if (!newRequest)
+      if (!newRequest) {
         res.status(404).json({ error: 'No se pudo crear el la solicitud' });
+        return;
+      }
       console.log(newRequest, 'newRequest');
 
       const [newNotification] = await db
@@ -59,14 +90,20 @@ export class FriendRequestController {
         })
         .onConflictDoNothing()
         .returning();
-      if (!newNotification)
+      if (!newNotification) {
         res
           .status(404)
           .json({ error: 'Ya existe una solicitud de amistad a este usuario' });
+        return;
+      }
       // Envía la respuesta con la nueva solicitud creada
       res.status(201).json({
         message: 'Se envió la solicitud de amistad!',
         newRequest,
+      });
+
+      await pusher.trigger(`user-${newNotification.userId}`, 'notification', {
+        message: newNotification.message,
       });
     } catch (error) {
       // Maneja los errores
@@ -108,58 +145,78 @@ export class FriendRequestController {
     res: Response
   ): Promise<void> {
     try {
+      console.log('tttttt1');
       const userId = req.userId as string;
       // Obtiene el ID de la solicitud de amistad y la acción del cuerpo de la solicitud
       const { requestId, action } = req.body;
-
+      console.log(requestId);
+      console.log(action);
       // Verifica si la acción es válida
-      if (validateStatus(action)) {
-        res.status(400).json({ error: 'Acción inválida' });
-        return;
-      }
+
+      console.log('tttttt2');
 
       // Busca la solicitud de amistad en la base de datos
       const [request] = await db
         .select()
         .from(friendRequests)
         .where(eq(friendRequests.id, requestId));
+      console.log('tttttt3');
 
       // Verifica si la solicitud existe
       if (!request) {
         res.status(404).json({ error: 'Solicitud de amistad no encontrada' });
         return;
       }
-
-      const [senderId] = await UserController.userExistsById(
-        request.senderId as string
-      );
-      const [ReceiverId] = await UserController.userExistsById(
-        request.receiverId as string
-      );
+      console.log('tttttt4');
 
       const bodySenderId = {
         userId: request.senderId,
         friendId: request.receiverId,
-        email: senderId.email,
       };
       const bodyReceiverId = {
         userId: request.receiverId,
         friendId: request.senderId,
-        email: ReceiverId.id,
       };
-      const newBodyUserSenderId = replaceRequestBody(req, bodySenderId);
-      const newBodyUserFriendId = replaceRequestBody(req, bodyReceiverId);
-      //Se añade como amigo al que envia
-      await FriendController.addFriend(newBodyUserSenderId, res);
-      //Se añade como amigo al que al que recibe
-      await FriendController.addFriend(newBodyUserFriendId, res);
+      console.log(bodyReceiverId);
+
+      const friendInserts = await db.batch([
+        db
+          .insert(friends)
+          .values({
+            id: nanoid(),
+            userId: request.senderId,
+            friendId: request.receiverId,
+          })
+          .onConflictDoNothing()
+          .returning(),
+        db
+          .insert(friends)
+          .values({
+            id: nanoid(),
+            userId: request.receiverId,
+            friendId: request.senderId,
+          })
+          .onConflictDoNothing()
+          .returning(),
+      ]);
+      console.log(friendInserts, 'friendInserts');
+      // const newBodyUserSenderId = replaceRequestBody(req, bodySenderId);
+      // const newBodyUserFriendId = replaceRequestBody(req, bodyReceiverId);
+      // //Se añade como amigo al que envia
+      // await FriendController.addFriend(newBodyUserSenderId, res);
+      // //Se añade como amigo al que al que recibe
+      // await FriendController.addFriend(newBodyUserFriendId, res);
 
       // Actualiza el estado de la solicitud
-      const requestUpdated = await db
+      const [requestUpdated] = await db
         .update(friendRequests)
-        .set({ status: action as Status });
+        .set({ status: action })
+        .returning();
+      console.log(requestUpdated, 'updatedddd');
       // Envía la respuesta con el estado actualizado de la solicitud
-      res.status(200).json(requestUpdated);
+      console.log('ttttttend');
+
+      res.status(200).json({ message: 'Haz aceptado la solicitud' });
     } catch (error) {
       // Maneja los errores
       res

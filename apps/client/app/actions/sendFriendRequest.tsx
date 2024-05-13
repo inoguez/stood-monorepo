@@ -37,6 +37,7 @@ export async function sendFriendRequest(formData: FormData) {
 
     // Procesar los datos recibidos...
   } catch (error: any) {
+    console.log(error);
     console.error('Error al realizar la solicitud:', error.message);
     // Manejar el error apropiadamente, por ejemplo, mostrar un mensaje de error al usuario
   }

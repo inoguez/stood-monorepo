@@ -159,7 +159,7 @@ router.get('/', async (req, res) => {
       refreshTokenCookieOptions(Date.now() + REFRESH_COOKIE_EXPIRATION_MS)
     );
 
-    return res.redirect(process.env.FRONTEND_URL as string);
+    res.redirect(process.env.FRONTEND_URL as string);
   } catch (error) {
     console.log('error with sign in with google', error);
   }

@@ -19,7 +19,7 @@ export class UserController {
       console.log('userIdAAAAA', userId);
       // Busca todos los usuarios en la base de datos
       const [authUser] = await db
-        .select({ name: users.name, picture: users.picture })
+        .select({ id: users.id, name: users.name, picture: users.picture })
         .from(users)
         .where(eq(users.id, userId));
 

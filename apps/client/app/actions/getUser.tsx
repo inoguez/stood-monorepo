@@ -1,25 +1,10 @@
 'use server';
-import { axiosAPI } from '../utils/axiosAPI';
+import HttpUtil from '../utils/fetchAPI';
 export async function getUser() {
   try {
-    const { data } = await axiosAPI.get('/users/authenticated');
-
-    // const token = cookies().get('accessToken')?.value;
-    // console.log(token);
-    // const response = await fetch(
-    //   process.env.STOOD_API + `/friendRequest/send`,
-    //   {
-    //     method: 'GET',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //       Authorization: `${token}`,
-    //     },
-    //   }
-    // );
-
-    // const data = await response.json();
+    const data = await HttpUtil.get('/users/authenticated', 'users');
     return data;
-  } catch (error) {
-    console.error('no se pudo pa', error);
+  } catch (error: any) {
+    console.error('Error al realizar la solicitud:', error.message);
   }
 }

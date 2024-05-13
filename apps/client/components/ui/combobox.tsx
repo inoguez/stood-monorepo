@@ -1,8 +1,7 @@
 'use client';
 
-import { Check, Plus, UserPlus } from 'lucide-react';
+import { Bell, Plus, UserPlus } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Command,
@@ -17,8 +16,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { useActionState, useEffect, useRef, useState } from 'react';
-import { friendRequests } from '../../../api/models/schema';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import {
   Drawer,
@@ -47,14 +45,11 @@ export function ComboboxDemo({
 
   const { pending } = useFormStatus();
 
-  console.log(value);
   useEffect(() => {
-    console.log('aa');
     if (!open) return setItems([]);
   }, [open]);
   useEffect(() => {
     if (!value.id) return;
-    console.log('abba');
     setDrawerOpen(true);
   }, [value]);
 
@@ -62,13 +57,16 @@ export function ComboboxDemo({
     console.log(term);
     if (!term) return setItems([]);
     const data = await searchQuery(term);
-    console.log(data);
     setItems(data);
   }
   async function sendRequest(formData: FormData) {
     const data = await sendFriendRequest(formData);
     setDrawerOpen(false);
-    toast(data?.error ? data?.error : data?.message);
+    toast('Notificacion', {
+      description: data?.error ? data?.error : data.message,
+      duration: 5000,
+      icon: <Bell />,
+    });
   }
   return (
     <>

@@ -1,22 +1,33 @@
 import { Request, Response } from 'express';
-import { db } from '@stood/database';
+import { db, users } from '@stood/database';
 import { friends } from '@stood/database';
 import { nanoid } from 'nanoid';
 import { and, eq } from 'drizzle-orm';
 import { UserController } from './UserController';
+import { AuthenticatedRequest } from '../app';
 
 export class FriendController {
   // Método para obtener todos los amigos de un usuario
-  static async getAllFriends(req: Request, res: Response): Promise<void> {
+  static async getAllFriends(
+    req: AuthenticatedRequest,
+    res: Response
+  ): Promise<void> {
     try {
       // Obtiene el ID del usuario de la solicitud
-      const userId = req.params.userId;
+      const userId = req.userId as string;
 
       // Busca todos los amigos del usuario en la base de datos
       const allFriends = await db
-        .select()
-        .from(friends)
+        .select({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          picture: users.picture,
+        })
+        .from(users)
+        .innerJoin(friends, eq(users.id, friends.friendId))
         .where(eq(friends.userId, userId));
+      // .where(eq(friends.userId, userId));
 
       // Envía la respuesta con los amigos encontrados
       res.status(200).json(allFriends);

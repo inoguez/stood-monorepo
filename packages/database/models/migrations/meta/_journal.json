@@ -8,6 +8,20 @@
       "when": 1715466049243,
       "tag": "0000_salty_sphinx",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1715573989249,
+      "tag": "0001_curly_victor_mancha",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1715574050455,
+      "tag": "0002_next_victor_mancha",
+      "breakpoints": true
     }
   ]
 }
