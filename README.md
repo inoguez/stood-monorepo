@@ -1,4 +1,4 @@
-![Stood Real Time Chat]([https://i.ibb.co/qkKDZ7Q/Screenshot-from-2024-06-13-21-54-20.png](https://cdn.dribbble.com/userupload/14260015/file/original-36f7463537e20bf559ccead63ec37ce3.png?resize=1600x1034))  
+![Stood Real Time Chat](https://i.ibb.co/qkKDZ7Q/Screenshot-from-2024-06-13-21-54-20.png](https://cdn.dribbble.com/userupload/14260015/file/original-36f7463537e20bf559ccead63ec37ce3.png?resize=1600x1034)  
 
 This is a [Next.js](https://nextjs.org/) and [Nestjs](https://nestjs.com/) Chat App monorepo project
 
