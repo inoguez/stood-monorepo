@@ -13,7 +13,7 @@ pnpm dev
 # or
 bun dev
 ```
-
+![Stood Real Time Chat](https://i.ibb.co/qkKDZ7Q/Screenshot-from-2024-06-13-21-54-20.png)
 Open [Nestjs - http://localhost:8000](http://localhost:8000) [Next.js http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `apps`. The folder auto-updates as you edit the files.
